@@ -248,10 +248,7 @@ func readRef(data []byte) (string, plumbing.Hash, error) {
 	case len(chunks) > 2:
 		return "", plumbing.ZeroHash, fmt.Errorf("malformed ref data: more than one space found")
 	default:
-		var ref, hash []byte
-		copy(ref, chunks[1])
-		copy(hash, chunks[0])
-		return string(ref), plumbing.NewHash(string(hash)), nil
+		return string(chunks[1]), plumbing.NewHash(string(chunks[0])), nil
 	}
 }
 
