@@ -122,10 +122,17 @@ func (c *command) connect() error {
 		return err
 	}
 	hostWithPort := c.getHostWithPort()
-	config, err = SetConfigHostKeyFields(config, hostWithPort)
-	if err != nil {
-		return err
-	}
+
+	//TODO: Fix auto-populate HostKeyAlgorithms upstream so the below can be uncommented.
+	// The introduction of auto-populate HostKeyAlgorithms in Go-Git breaks Flux implementation
+	// as it relies on file-based knownhosts. Flux injects in-memory knownhosts instead.
+	//
+	// https://github.com/go-git/go-git/pull/548
+	// https://github.com/fluxcd/pkg/blob/b37a57c5f1439eb9fe38d5f5f1af96ac17633513/ssh/knownhosts/knownhosts.go#L370
+	// config, err = SetConfigHostKeyFields(config, hostWithPort)
+	// if err != nil {
+	// 	return err
+	// }
 
 	overrideConfig(c.config, config)
 
