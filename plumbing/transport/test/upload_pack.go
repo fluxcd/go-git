@@ -1,6 +1,5 @@
 // Package test implements common test suite for different transport
 // implementations.
-//
 package test
 
 import (
@@ -88,7 +87,7 @@ func (s *UploadPackSuite) TestAdvertisedReferencesFilterUnsupported(c *C) {
 
 	info, err := r.AdvertisedReferences()
 	c.Assert(err, IsNil)
-	c.Assert(info.Capabilities.Supports(capability.MultiACK), Equals, false)
+	c.Assert(info.Capabilities.Supports(capability.MultiACK), Equals, true)
 }
 
 func (s *UploadPackSuite) TestCapabilities(c *C) {
