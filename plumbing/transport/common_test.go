@@ -184,5 +184,5 @@ func (s *SuiteCommon) TestFilterUnsupportedCapabilities(c *C) {
 	l.Set(capability.MultiACK)
 
 	FilterUnsupportedCapabilities(l)
-	c.Assert(l.Supports(capability.MultiACK), Equals, false)
+	c.Assert(l.Supports(capability.MultiACK), Equals, true)
 }

@@ -67,7 +67,7 @@ func (s *UploadPackResponseSuite) TestDecodeMultiACK(c *C) {
 	defer res.Close()
 
 	err := res.Decode(ioutil.NopCloser(bytes.NewBuffer(nil)))
-	c.Assert(err, NotNil)
+	c.Assert(err, IsNil)
 }
 
 func (s *UploadPackResponseSuite) TestReadNoDecode(c *C) {
