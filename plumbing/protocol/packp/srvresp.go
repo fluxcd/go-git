@@ -43,7 +43,23 @@ func (r *ServerResponse) Decode(reader *bufio.Reader, isMultiACK bool) error {
 		}
 	}
 
-	return s.Err()
+	// isMultiACK is true when the remote server advertises the related
+	// capabilities when they are not in transport.UnsupportedCapabilities.
+	//
+	// Users may decide to remove multi_ack and multi_ack_detailed from the
+	// unsupported capabilities list, which allows them to do initial clones
+	// from Azure DevOps.
+	//
+	// Follow-up fetches may error, therefore errors are wrapped with additional
+	// information highlighting that this capabilities are not supported by go-git.
+	//
+	// TODO: Implement support for multi_ack or multi_ack_detailed responses.
+	err := s.Err()
+	if err != nil && isMultiACK {
+		return fmt.Errorf("multi_ack and multi_ack_detailed are not supported: %w", err)
+	}
+
+	return err
 }
 
 // stopReading detects when a valid command such as ACK or NAK is found to be
@@ -108,8 +124,9 @@ func (r *ServerResponse) decodeACKLine(line []byte) error {
 }
 
 // Encode encodes the ServerResponse into a writer.
-func (r *ServerResponse) Encode(w io.Writer) error {
-	if len(r.ACKs) > 1 {
+func (r *ServerResponse) Encode(w io.Writer, isMultiACK bool) error {
+	if len(r.ACKs) > 1 && !isMultiACK {
+		// For further information, refer to comments in the Decode func above.
 		return errors.New("multi_ack and multi_ack_detailed are not supported")
 	}
 
