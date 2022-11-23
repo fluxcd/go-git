@@ -6,7 +6,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"net"
 	gohttp "net/http"
+	"time"
 
 	"github.com/fluxcd/go-git/v5/plumbing/transport"
 	"github.com/fluxcd/go-git/v5/plumbing/transport/file"
@@ -24,12 +26,25 @@ var Protocols = map[string]transport.Transport{
 	"file":  file.DefaultClient,
 }
 
+var dialer = net.Dialer{
+	Timeout:   30 * time.Second,
+	KeepAlive: 30 * time.Second,
+}
+
+func defaultTransport() *gohttp.Transport {
+	t := gohttp.DefaultTransport.(*gohttp.Transport).Clone()
+	if t.TLSClientConfig != nil {
+		t.TLSClientConfig = &tls.Config{}
+	}
+	return t
+}
+
 var insecureClient = http.NewClient(&gohttp.Client{
-	Transport: &gohttp.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true,
-		},
-	},
+	Transport: func() *gohttp.Transport {
+		t := defaultTransport()
+		t.TLSClientConfig.InsecureSkipVerify = true
+		return t
+	}(),
 })
 
 // InstallProtocol adds or modifies an existing protocol.
@@ -62,11 +77,11 @@ func getTransport(endpoint *transport.Endpoint) (transport.Transport, error) {
 			}
 			rootCAs.AppendCertsFromPEM(endpoint.CaBundle)
 			return http.NewClient(&gohttp.Client{
-				Transport: &gohttp.Transport{
-					TLSClientConfig: &tls.Config{
-						RootCAs: rootCAs,
-					},
-				},
+				Transport: func() *gohttp.Transport {
+					t := defaultTransport()
+					t.TLSClientConfig.RootCAs = rootCAs
+					return t
+				}(),
 			}), nil
 		}
 	}
