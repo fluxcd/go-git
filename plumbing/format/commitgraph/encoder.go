@@ -1,11 +1,10 @@
 package commitgraph
 
 import (
-	"crypto/sha1"
-	"hash"
 	"io"
 
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/hash"
 	"github.com/go-git/go-git/v5/utils/binary"
 )
 
@@ -17,7 +16,7 @@ type Encoder struct {
 
 // NewEncoder returns a new stream encoder that writes to w.
 func NewEncoder(w io.Writer) *Encoder {
-	h := sha1.New()
+	h := hash.NewSha1()
 	mw := io.MultiWriter(w, h)
 	return &Encoder{mw, h}
 }
