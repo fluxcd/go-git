@@ -26,10 +26,16 @@ import (
 )
 
 func (s *WorktreeSuite) TestCommitEmptyOptions(c *C) {
-	r, err := Init(memory.NewStorage(), memfs.New())
+	fs := memfs.New()
+	r, err := Init(memory.NewStorage(), fs)
 	c.Assert(err, IsNil)
 
 	w, err := r.Worktree()
+	c.Assert(err, IsNil)
+
+	util.WriteFile(fs, "foo", []byte("foo"), 0644)
+
+	_, err = w.Add("foo")
 	c.Assert(err, IsNil)
 
 	hash, err := w.Commit("foo", &CommitOptions{})
@@ -63,6 +69,18 @@ func (s *WorktreeSuite) TestCommitInitial(c *C) {
 	c.Assert(err, IsNil)
 
 	assertStorageStatus(c, r, 1, 1, 1, expected)
+}
+
+func (s *WorktreeSuite) TestNothingToCommit(c *C) {
+	r, err := Init(memory.NewStorage(), memfs.New())
+	c.Assert(err, IsNil)
+
+	w, err := r.Worktree()
+	c.Assert(err, IsNil)
+
+	hash, err := w.Commit("empty commit\n", &CommitOptions{Author: defaultSignature()})
+	c.Assert(hash, Equals, plumbing.ZeroHash)
+	c.Assert(err, Equals, ErrEmptyCommit)
 }
 
 func (s *WorktreeSuite) TestCommitParent(c *C) {

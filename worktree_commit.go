@@ -2,6 +2,7 @@ package git
 
 import (
 	"bytes"
+	"errors"
 	"path"
 	"sort"
 	"strings"
@@ -14,6 +15,12 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/go-git/go-billy/v5"
+)
+
+var (
+	// ErrEmptyCommit occurs when a commit is attempted using a clean
+	// working tree, with no changes to be committed.
+	ErrEmptyCommit = errors.New("cannot create empty commit: clean working tree")
 )
 
 // Commit stores the current contents of the index in a new commit along with
@@ -146,6 +153,10 @@ type buildTreeHelper struct {
 // BuildTree builds the tree objects and push its to the storer, the hash
 // of the root tree is returned.
 func (h *buildTreeHelper) BuildTree(idx *index.Index) (plumbing.Hash, error) {
+	if len(idx.Entries) == 0 {
+		return plumbing.ZeroHash, ErrEmptyCommit
+	}
+
 	const rootNode = ""
 	h.trees = map[string]*object.Tree{rootNode: {}}
 	h.entries = map[string]*object.TreeEntry{}
