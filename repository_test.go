@@ -342,6 +342,7 @@ func (s *RepositorySuite) TestCreateBranchUnmarshal(c *C) {
 
 	expected := []byte(`[core]
 	bare = true
+	repositoryformatversion = 0
 [remote "foo"]
 	url = http://foo/foo.git
 	fetch = +refs/heads/*:refs/remotes/foo/*

@@ -21,6 +21,7 @@ func (b *URLSuite) TestValidateInsteadOf(c *C) {
 func (b *URLSuite) TestMarshal(c *C) {
 	expected := []byte(`[core]
 	bare = false
+	repositoryformatversion = 0
 [url "ssh://git@github.com/"]
 	insteadOf = https://github.com/
 `)

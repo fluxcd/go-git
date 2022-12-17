@@ -42,6 +42,7 @@ func (b *BranchSuite) TestValidateMerge(c *C) {
 func (b *BranchSuite) TestMarshal(c *C) {
 	expected := []byte(`[core]
 	bare = false
+	repositoryformatversion = 0
 [branch "branch-tracking-on-clone"]
 	remote = fork
 	merge = refs/heads/branch-tracking-on-clone

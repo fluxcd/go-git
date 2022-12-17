@@ -18,8 +18,11 @@ var _ = Suite(&ConfigSuite{})
 func (s *ConfigSuite) TestUnmarshal(c *C) {
 	input := []byte(`[core]
 		bare = true
+		repositoryformatversion = 0
 		worktree = foo
 		commentchar = bar
+[extensions]
+	objectformat = sha1
 [user]
 		name = John Doe
 		email = john@example.com
@@ -62,8 +65,10 @@ func (s *ConfigSuite) TestUnmarshal(c *C) {
 	c.Assert(err, IsNil)
 
 	c.Assert(cfg.Core.IsBare, Equals, true)
+	c.Assert(cfg.Core.RepositoryFormatVersion, Equals, "0")
 	c.Assert(cfg.Core.Worktree, Equals, "foo")
 	c.Assert(cfg.Core.CommentChar, Equals, "bar")
+	c.Assert(cfg.Extensions.ObjectFormat, Equals, "sha1")
 	c.Assert(cfg.User.Name, Equals, "John Doe")
 	c.Assert(cfg.User.Email, Equals, "john@example.com")
 	c.Assert(cfg.Author.Name, Equals, "Jane Roe")
@@ -94,7 +99,10 @@ func (s *ConfigSuite) TestUnmarshal(c *C) {
 func (s *ConfigSuite) TestMarshal(c *C) {
 	output := []byte(`[core]
 	bare = true
+	repositoryformatversion = 1
 	worktree = bar
+[extensions]
+	objectformat = sha1
 [pack]
 	window = 20
 [remote "alt"]
@@ -123,6 +131,8 @@ func (s *ConfigSuite) TestMarshal(c *C) {
 	cfg := NewConfig()
 	cfg.Core.IsBare = true
 	cfg.Core.Worktree = "bar"
+	cfg.Core.RepositoryFormatVersion = "1"
+	cfg.Extensions.ObjectFormat = "sha1"
 	cfg.Pack.Window = 20
 	cfg.Init.DefaultBranch = "main"
 	cfg.Remotes["origin"] = &RemoteConfig{
@@ -174,6 +184,7 @@ func (s *ConfigSuite) TestUnmarshalMarshal(c *C) {
 	bare = true
 	worktree = foo
 	custom = ignored
+	repositoryformatversion = 0
 [user]
 	name = John Doe
 	email = john@example.com
