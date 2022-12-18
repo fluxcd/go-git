@@ -553,7 +553,7 @@ func (d *DotGit) hasPack(h plumbing.Hash) error {
 
 func (d *DotGit) objectPath(h plumbing.Hash) string {
 	hash := h.String()
-	return d.fs.Join(objectsPath, hash[0:2], hash[2:40])
+	return d.fs.Join(objectsPath, hash[0:2], hash[2:])
 }
 
 // incomingObjectPath is intended to add support for a git pre-receive hook
@@ -569,10 +569,10 @@ func (d *DotGit) incomingObjectPath(h plumbing.Hash) string {
 	hString := h.String()
 
 	if d.incomingDirName == "" {
-		return d.fs.Join(objectsPath, hString[0:2], hString[2:40])
+		return d.fs.Join(objectsPath, hString[0:2], hString[2:])
 	}
 
-	return d.fs.Join(objectsPath, d.incomingDirName, hString[0:2], hString[2:40])
+	return d.fs.Join(objectsPath, d.incomingDirName, hString[0:2], hString[2:])
 }
 
 // hasIncomingObjects searches for an incoming directory and keeps its name

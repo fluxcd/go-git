@@ -183,7 +183,6 @@ func (e *Encoder) encodeExtraEdges(extraEdges []uint32) (err error) {
 }
 
 func (e *Encoder) encodeChecksum() error {
-	hexSize := e.hash.Size() * 2
-	_, err := e.Write(e.hash.Sum(nil)[:hexSize])
+	_, err := e.Write(e.hash.Sum(nil)[:])
 	return err
 }

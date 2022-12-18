@@ -133,8 +133,7 @@ func (e *Encoder) encodeChecksums(idx *MemoryIndex) (int, error) {
 		return 0, err
 	}
 
-	hexSize := e.hash.Size() * 2
-	copy(idx.IdxChecksum[:], e.hash.Sum(nil)[:hexSize])
+	copy(idx.IdxChecksum[:], e.hash.Sum(nil)[:])
 	if _, err := e.Write(idx.IdxChecksum[:]); err != nil {
 		return 0, err
 	}

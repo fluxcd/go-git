@@ -33,7 +33,7 @@ func (s *EncoderSuite) TestCorrectPackHeader(c *C) {
 	hash, err := s.enc.Encode([]plumbing.Hash{}, 10)
 	c.Assert(err, IsNil)
 
-	hb := [20]byte(hash)
+	hb := []byte(hash[:])
 
 	// PACK + VERSION + OBJECTS + HASH
 	expectedResult := []byte{'P', 'A', 'C', 'K', 0, 0, 0, 2, 0, 0, 0, 0}
@@ -64,7 +64,7 @@ func (s *EncoderSuite) TestCorrectPackWithOneEmptyObject(c *C) {
 		[]byte{120, 156, 1, 0, 0, 255, 255, 0, 0, 0, 1}...)
 
 	// + HASH
-	hb := [20]byte(hash)
+	hb := []byte(hash[:])
 	expectedResult = append(expectedResult, hb[:]...)
 
 	result := s.buf.Bytes()

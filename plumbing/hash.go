@@ -75,10 +75,12 @@ func (p HashSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // IsHash returns true if the given string is a valid hash.
 func IsHash(s string) bool {
-	if len(s) != 40 {
+	switch len(s) {
+	// Only attempt to decode if length matches output for SHA1 or SHA256.
+	case 40, 64:
+		_, err := hex.DecodeString(s)
+		return err == nil
+	default:
 		return false
 	}
-
-	_, err := hex.DecodeString(s)
-	return err == nil
 }

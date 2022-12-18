@@ -119,8 +119,8 @@ type byHash []plumbing.Hash
 func (a byHash) Len() int      { return len(a) }
 func (a byHash) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a byHash) Less(i, j int) bool {
-	ii := [20]byte(a[i])
-	jj := [20]byte(a[j])
+	ii := []byte(a[i][:])
+	jj := []byte(a[j][:])
 	return bytes.Compare(ii[:], jj[:]) < 0
 }
 

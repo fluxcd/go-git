@@ -650,7 +650,7 @@ func (s *SuiteDotGit) TestObject(c *C) {
 	)
 	incomingHash := "9d25e0f9bde9f82882b49fe29117b9411cb157b7" //made up hash
 	incomingDirPath := fs.Join("objects", "incoming-123456")
-	incomingFilePath := fs.Join(incomingDirPath, incomingHash[0:2], incomingHash[2:40])
+	incomingFilePath := fs.Join(incomingDirPath, incomingHash[0:2], incomingHash[2:])
 	fs.MkdirAll(incomingDirPath, os.FileMode(0755))
 	fs.Create(incomingFilePath)
 
@@ -667,7 +667,7 @@ func (s *SuiteDotGit) TestObjectStat(c *C) {
 	c.Assert(err, IsNil)
 	incomingHash := "9d25e0f9bde9f82882b49fe29117b9411cb157b7" //made up hash
 	incomingDirPath := fs.Join("objects", "incoming-123456")
-	incomingFilePath := fs.Join(incomingDirPath, incomingHash[0:2], incomingHash[2:40])
+	incomingFilePath := fs.Join(incomingDirPath, incomingHash[0:2], incomingHash[2:])
 	fs.MkdirAll(incomingDirPath, os.FileMode(0755))
 	fs.Create(incomingFilePath)
 
@@ -686,7 +686,7 @@ func (s *SuiteDotGit) TestObjectDelete(c *C) {
 	incomingHash := "9d25e0f9bde9f82882b49fe29117b9411cb157b7" //made up hash
 	incomingDirPath := fs.Join("objects", "incoming-123456")
 	incomingSubDirPath := fs.Join(incomingDirPath, incomingHash[0:2])
-	incomingFilePath := fs.Join(incomingSubDirPath, incomingHash[2:40])
+	incomingFilePath := fs.Join(incomingSubDirPath, incomingHash[2:])
 
 	err = fs.MkdirAll(incomingSubDirPath, os.FileMode(0755))
 	c.Assert(err, IsNil)

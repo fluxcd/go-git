@@ -278,7 +278,7 @@ func (w *ObjectWriter) Close() error {
 
 func (w *ObjectWriter) save() error {
 	hash := w.Hash().String()
-	file := w.fs.Join(objectsPath, hash[0:2], hash[2:40])
+	file := w.fs.Join(objectsPath, hash[0:2], hash[2:])
 
 	return w.fs.Rename(w.f.Name(), file)
 }
