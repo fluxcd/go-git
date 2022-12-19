@@ -239,7 +239,7 @@ func (w *Worktree) diffTreeWithStaging(t *object.Tree, reverse bool) (merkletrie
 	return merkletrie.DiffTree(from, to, diffTreeIsEquals)
 }
 
-var emptyNoderHash = make([]byte, 24)
+var emptyNoderHash = make([]byte, 24) //36
 
 // diffTreeIsEquals is a implementation of noder.Equals, used to compare
 // noder.Noder, it compare the content and the length of the hashes.

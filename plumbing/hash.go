@@ -10,8 +10,7 @@ import (
 	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 )
 
-// Hash SHA1 hashed content
-type Hash [20]byte
+type Hash [20]byte //32
 
 // ZeroHash is Hash with value zero
 var ZeroHash Hash

@@ -42,6 +42,13 @@ func (s *HashSuite) TestNewHasher(c *C) {
 	c.Assert(hasher.Sum().String(), Equals, "dc42c3cc80028d0ec61f0a6b24cadd1c195c4dfc")
 }
 
+func (s *HashSuite) TestNewHasher256(c *C) {
+	content := "hasher test sample"
+	hasher := NewHasher(BlobObject, int64(len(content)), objectformat.SHA256)
+	hasher.Write([]byte(content))
+	c.Assert(hasher.Sum().String(), Equals, "6d5ac9c9bc3ec5ecd8acc968eb0dafb942256a317cad2c3bd42059b568f6036e")
+}
+
 func (s *HashSuite) TestHashesSort(c *C) {
 	i := []Hash{
 		NewHash("2222222222222222222222222222222222222222"),

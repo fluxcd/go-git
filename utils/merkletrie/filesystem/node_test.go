@@ -212,7 +212,7 @@ func WriteFile(fs billy.Filesystem, filename string, data []byte, perm os.FileMo
 	return err
 }
 
-var empty = make([]byte, 24)
+var empty = make([]byte, 24) //36
 
 func IsEquals(a, b noder.Hasher) bool {
 	if bytes.Equal(a.Hash(), empty) || bytes.Equal(b.Hash(), empty) {

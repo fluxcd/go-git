@@ -668,3 +668,17 @@ type PlainOpenOptions struct {
 
 // Validate validates the fields and sets the default values.
 func (o *PlainOpenOptions) Validate() error { return nil }
+
+type ObjectFormat string
+
+const (
+	SHA1   ObjectFormat = "sha1"
+	SHA256 ObjectFormat = "sha256"
+)
+
+type PlainInitOptions struct {
+	ObjectFormat ObjectFormat
+}
+
+// Validate validates the fields and sets the default values.
+func (o *PlainInitOptions) Validate() error { return nil }

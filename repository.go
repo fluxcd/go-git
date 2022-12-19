@@ -228,6 +228,33 @@ func PlainInit(path string, isBare bool) (*Repository, error) {
 	return Init(s, wt)
 }
 
+func PlainInitWithOptions(path string, opts *PlainInitOptions) (*Repository, error) {
+	wt := osfs.New(path)
+	dot, _ := wt.Chroot(GitDirName)
+
+	s := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
+
+	r, err := Init(s, wt)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, err := r.Config()
+	if err != nil {
+		return nil, err
+	}
+
+	cfg.Core.RepositoryFormatVersion = "1"
+	cfg.Extensions.ObjectFormat = string(opts.ObjectFormat)
+
+	err = r.Storer.SetConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, err
+}
+
 // PlainOpen opens a git repository from the given path. It detects if the
 // repository is bare or a normal one. If the path doesn't contain a valid
 // repository ErrRepositoryNotExists is returned

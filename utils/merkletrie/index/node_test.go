@@ -103,7 +103,7 @@ func (s *NoderSuite) TestDiffSameRoot(c *C) {
 	c.Assert(ch, HasLen, 1)
 }
 
-var empty = make([]byte, 24)
+var empty = make([]byte, 24) //36
 
 func isEquals(a, b noder.Hasher) bool {
 	if bytes.Equal(a.Hash(), empty) || bytes.Equal(b.Hash(), empty) {
