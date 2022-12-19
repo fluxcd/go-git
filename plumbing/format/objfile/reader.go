@@ -7,6 +7,7 @@ import (
 
 	"github.com/fluxcd/go-git/v5/plumbing"
 	"github.com/fluxcd/go-git/v5/plumbing/format/packfile"
+	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 	"github.com/fluxcd/go-git/v5/utils/sync"
 )
 
@@ -24,6 +25,8 @@ type Reader struct {
 	zlib    io.Reader
 	zlibref sync.ZLibReader
 	hasher  plumbing.Hasher
+
+	format objectformat.ObjectFormat
 }
 
 // NewReader returns a new Reader reading from r.
@@ -36,6 +39,7 @@ func NewReader(r io.Reader) (*Reader, error) {
 	return &Reader{
 		zlib:    zlib.Reader,
 		zlibref: zlib,
+		format:  objectformat.SHA1,
 	}, nil
 }
 
@@ -89,7 +93,7 @@ func (r *Reader) readUntil(delim byte) ([]byte, error) {
 }
 
 func (r *Reader) prepareForRead(t plumbing.ObjectType, size int64) {
-	r.hasher = plumbing.NewHasher(t, size)
+	r.hasher = plumbing.NewHasher(t, size, r.format)
 	r.multi = io.TeeReader(r.zlib, r.hasher)
 }
 

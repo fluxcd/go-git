@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/fluxcd/go-git/v5/plumbing"
+	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 	"github.com/fluxcd/go-git/v5/utils/sync"
 )
 
@@ -22,6 +23,7 @@ type Writer struct {
 	hasher plumbing.Hasher
 	multi  io.Writer
 	zlib   *zlib.Writer
+	format objectformat.ObjectFormat
 
 	closed  bool
 	pending int64 // number of unwritten bytes
@@ -64,7 +66,7 @@ func (w *Writer) WriteHeader(t plumbing.ObjectType, size int64) error {
 func (w *Writer) prepareForWrite(t plumbing.ObjectType, size int64) {
 	w.pending = size
 
-	w.hasher = plumbing.NewHasher(t, size)
+	w.hasher = plumbing.NewHasher(t, size, w.format)
 	w.multi = io.MultiWriter(w.zlib, w.hasher)
 }
 

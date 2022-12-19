@@ -2,12 +2,12 @@ package plumbing
 
 import (
 	"bytes"
-	"crypto"
 	"encoding/hex"
 	"sort"
 	"strconv"
 
 	"github.com/fluxcd/go-git/v5/plumbing/hash"
+	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 )
 
 // Hash SHA1 hashed content
@@ -18,7 +18,7 @@ var ZeroHash Hash
 
 // ComputeHash compute the hash for a given ObjectType and content
 func ComputeHash(t ObjectType, content []byte) Hash {
-	h := NewHasher(t, int64(len(content)))
+	h := NewHasher(t, int64(len(content)), objectformat.SHA1)
 	h.Write(content)
 	return h.Sum()
 }
@@ -46,8 +46,8 @@ type Hasher struct {
 	hash.Hash
 }
 
-func NewHasher(t ObjectType, size int64) Hasher {
-	h := Hasher{hash.New(crypto.SHA1)}
+func NewHasher(t ObjectType, size int64, f objectformat.ObjectFormat) Hasher {
+	h := Hasher{hash.New(f)}
 	h.Write(t.Bytes())
 	h.Write([]byte(" "))
 	h.Write([]byte(strconv.FormatInt(size, 10)))

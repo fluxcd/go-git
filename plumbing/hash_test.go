@@ -3,6 +3,7 @@ package plumbing
 import (
 	"testing"
 
+	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 	. "gopkg.in/check.v1"
 )
 
@@ -36,7 +37,7 @@ func (s *HashSuite) TestIsZero(c *C) {
 
 func (s *HashSuite) TestNewHasher(c *C) {
 	content := "hasher test sample"
-	hasher := NewHasher(BlobObject, int64(len(content)))
+	hasher := NewHasher(BlobObject, int64(len(content)), objectformat.SHA1)
 	hasher.Write([]byte(content))
 	c.Assert(hasher.Sum().String(), Equals, "dc42c3cc80028d0ec61f0a6b24cadd1c195c4dfc")
 }

@@ -8,6 +8,7 @@ import (
 
 	"github.com/fluxcd/go-git/v5/plumbing"
 	"github.com/fluxcd/go-git/v5/plumbing/cache"
+	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 	"github.com/fluxcd/go-git/v5/plumbing/storer"
 	"github.com/fluxcd/go-git/v5/utils/ioutil"
 	"github.com/fluxcd/go-git/v5/utils/sync"
@@ -465,7 +466,7 @@ func applyPatchBase(ota *objectInfo, data, base []byte) ([]byte, error) {
 }
 
 func getSHA1(t plumbing.ObjectType, data []byte) (plumbing.Hash, error) {
-	hasher := plumbing.NewHasher(t, int64(len(data)))
+	hasher := plumbing.NewHasher(t, int64(len(data)), objectformat.SHA1)
 	if _, err := hasher.Write(data); err != nil {
 		return plumbing.ZeroHash, err
 	}

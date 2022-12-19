@@ -7,6 +7,7 @@ import (
 
 	"github.com/fluxcd/go-git/v5/plumbing"
 	"github.com/fluxcd/go-git/v5/plumbing/filemode"
+	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 	"github.com/fluxcd/go-git/v5/utils/merkletrie/noder"
 
 	"github.com/go-git/go-billy/v5"
@@ -29,6 +30,7 @@ type node struct {
 	hash     []byte
 	children []noder.Noder
 	isDir    bool
+	format   objectformat.ObjectFormat
 }
 
 // NewRootNode returns the root node based on a given billy.Filesystem.
@@ -48,7 +50,8 @@ func NewRootNode(
 // difftree algorithm will detect changes in the contents of files and also in
 // their mode.
 //
-// The hash of a directory is always a 24-bytes slice of zero values
+// The hash of a directory is always a 24-bytes slice of zero values, or
+// 36-bytes when SHA256 is being used.
 func (n *node) Hash() []byte {
 	return n.hash
 }
@@ -141,7 +144,8 @@ func (n *node) newChildNode(file os.FileInfo) (*node, error) {
 
 func (n *node) calculateHash(path string, file os.FileInfo) ([]byte, error) {
 	if file.IsDir() {
-		return make([]byte, 24), nil
+		size := n.format.Size() + 4
+		return make([]byte, size), nil
 	}
 
 	var hash plumbing.Hash
@@ -172,7 +176,7 @@ func (n *node) doCalculateHashForRegular(path string, file os.FileInfo) (plumbin
 
 	defer f.Close()
 
-	h := plumbing.NewHasher(plumbing.BlobObject, file.Size())
+	h := plumbing.NewHasher(plumbing.BlobObject, file.Size(), n.format)
 	if _, err := io.Copy(h, f); err != nil {
 		return plumbing.ZeroHash, err
 	}
@@ -186,7 +190,7 @@ func (n *node) doCalculateHashForSymlink(path string, file os.FileInfo) (plumbin
 		return plumbing.ZeroHash, err
 	}
 
-	h := plumbing.NewHasher(plumbing.BlobObject, file.Size())
+	h := plumbing.NewHasher(plumbing.BlobObject, file.Size(), n.format)
 	if _, err := h.Write([]byte(target)); err != nil {
 		return plumbing.ZeroHash, err
 	}

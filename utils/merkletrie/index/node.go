@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/fluxcd/go-git/v5/plumbing/format/index"
+	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 	"github.com/fluxcd/go-git/v5/utils/merkletrie/noder"
 )
 
@@ -20,6 +21,7 @@ type node struct {
 	children []noder.Noder
 	isDir    bool
 	skip     bool
+	format   objectformat.ObjectFormat
 }
 
 // NewRootNode returns the root node of a computed tree from a index.Index,
@@ -69,10 +71,11 @@ func (n *node) Skip() bool {
 // contents of files and also in their mode.
 //
 // If the node is computed and not based on a index.Entry the hash is equals
-// to a 24-bytes slices of zero values.
+// to a 24-bytes slices of zero values, or 36-bytes when SHA256 is being used.
 func (n *node) Hash() []byte {
 	if n.entry == nil {
-		return make([]byte, 24)
+		size := n.format.Size() + 4
+		return make([]byte, size)
 	}
 
 	return append(n.entry.Hash[:], n.entry.Mode.Bytes()...)

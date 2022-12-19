@@ -2,13 +2,13 @@ package index
 
 import (
 	"bytes"
-	"crypto"
 	"errors"
 	"io"
 	"sort"
 	"time"
 
 	"github.com/fluxcd/go-git/v5/plumbing/hash"
+	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 	"github.com/fluxcd/go-git/v5/utils/binary"
 )
 
@@ -29,7 +29,7 @@ type Encoder struct {
 
 // NewEncoder returns a new encoder that writes to w.
 func NewEncoder(w io.Writer) *Encoder {
-	h := hash.New(crypto.SHA1)
+	h := hash.New(objectformat.SHA1)
 	mw := io.MultiWriter(w, h)
 	return &Encoder{mw, h}
 }

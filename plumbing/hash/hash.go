@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"hash"
 
+	"github.com/fluxcd/go-git/v5/plumbing/objectformat"
 	"github.com/pjbgf/sha1cd/cgo"
 )
 
 // algos is a map of hash algorithms.
-var algos = map[crypto.Hash]func() hash.Hash{}
+var algos = map[objectformat.ObjectFormat]func() hash.Hash{}
 
 func init() {
 	reset()
@@ -22,22 +23,22 @@ func init() {
 func reset() {
 	// For performance reasons the cgo version of the collision
 	// detection algorithm is being used.
-	algos[crypto.SHA1] = cgo.New
-	algos[crypto.SHA256] = crypto.SHA256.New
+	algos[objectformat.SHA1] = cgo.New
+	algos[objectformat.SHA256] = crypto.SHA256.New
 }
 
 // RegisterHash allows for the hash algorithm used to be overriden.
 // This ensures the hash selection for go-git must be explicit, when
 // overriding the default value.
-func RegisterHash(h crypto.Hash, f func() hash.Hash) error {
+func RegisterHash(h objectformat.ObjectFormat, f func() hash.Hash) error {
 	if f == nil {
 		return fmt.Errorf("cannot register hash: f is nil")
 	}
 
 	switch h {
-	case crypto.SHA1:
+	case objectformat.SHA1:
 		algos[h] = f
-	case crypto.SHA256:
+	case objectformat.SHA256:
 		algos[h] = f
 	default:
 		return fmt.Errorf("unsupported hash function: %v", h)
@@ -51,9 +52,9 @@ type Hash interface {
 	hash.Hash
 }
 
-// New returns a new Hash for the given hash function.
+// New returns a new Hash for the given object format.
 // It panics if the hash function is not registered.
-func New(h crypto.Hash) Hash {
+func New(h objectformat.ObjectFormat) Hash {
 	hh, ok := algos[h]
 	if !ok {
 		panic(fmt.Sprintf("hash algorithm not registered: %s", h))
