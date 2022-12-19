@@ -3,6 +3,7 @@ package memory
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/fluxcd/go-git/v5/config"
@@ -88,6 +89,8 @@ type ObjectStorage struct {
 	Trees   map[plumbing.Hash]plumbing.EncodedObject
 	Blobs   map[plumbing.Hash]plumbing.EncodedObject
 	Tags    map[plumbing.Hash]plumbing.EncodedObject
+
+	m sync.RWMutex
 }
 
 func (o *ObjectStorage) NewEncodedObject() plumbing.EncodedObject {
@@ -96,6 +99,8 @@ func (o *ObjectStorage) NewEncodedObject() plumbing.EncodedObject {
 
 func (o *ObjectStorage) SetEncodedObject(obj plumbing.EncodedObject) (plumbing.Hash, error) {
 	h := obj.Hash()
+
+	o.m.Lock()
 	o.Objects[h] = obj
 
 	switch obj.Type() {
@@ -108,13 +113,17 @@ func (o *ObjectStorage) SetEncodedObject(obj plumbing.EncodedObject) (plumbing.H
 	case plumbing.TagObject:
 		o.Tags[h] = o.Objects[h]
 	default:
+		o.m.Unlock()
 		return h, ErrUnsupportedObjectType
 	}
+	o.m.Unlock()
 
 	return h, nil
 }
 
 func (o *ObjectStorage) HasEncodedObject(h plumbing.Hash) (err error) {
+	o.m.RLock()
+	defer o.m.RUnlock()
 	if _, ok := o.Objects[h]; !ok {
 		return plumbing.ErrObjectNotFound
 	}
@@ -123,6 +132,9 @@ func (o *ObjectStorage) HasEncodedObject(h plumbing.Hash) (err error) {
 
 func (o *ObjectStorage) EncodedObjectSize(h plumbing.Hash) (
 	size int64, err error) {
+	o.m.RLock()
+	defer o.m.RUnlock()
+
 	obj, ok := o.Objects[h]
 	if !ok {
 		return 0, plumbing.ErrObjectNotFound
@@ -132,6 +144,9 @@ func (o *ObjectStorage) EncodedObjectSize(h plumbing.Hash) (
 }
 
 func (o *ObjectStorage) EncodedObject(t plumbing.ObjectType, h plumbing.Hash) (plumbing.EncodedObject, error) {
+	o.m.RLock()
+	defer o.m.RUnlock()
+
 	obj, ok := o.Objects[h]
 	if !ok || (plumbing.AnyObject != t && obj.Type() != t) {
 		return nil, plumbing.ErrObjectNotFound
@@ -174,6 +189,9 @@ func (o *ObjectStorage) Begin() storer.Transaction {
 }
 
 func (o *ObjectStorage) ForEachObjectHash(fun func(plumbing.Hash) error) error {
+	o.m.RLock()
+	defer o.m.RUnlock()
+
 	for h := range o.Objects {
 		err := fun(h)
 		if err != nil {
@@ -205,16 +223,23 @@ func (o *ObjectStorage) DeleteLooseObject(plumbing.Hash) error {
 type TxObjectStorage struct {
 	Storage *ObjectStorage
 	Objects map[plumbing.Hash]plumbing.EncodedObject
+
+	m sync.RWMutex
 }
 
 func (tx *TxObjectStorage) SetEncodedObject(obj plumbing.EncodedObject) (plumbing.Hash, error) {
 	h := obj.Hash()
+	tx.m.Lock()
 	tx.Objects[h] = obj
+	tx.m.Unlock()
 
 	return h, nil
 }
 
 func (tx *TxObjectStorage) EncodedObject(t plumbing.ObjectType, h plumbing.Hash) (plumbing.EncodedObject, error) {
+	tx.m.RLock()
+	defer tx.m.RUnlock()
+
 	obj, ok := tx.Objects[h]
 	if !ok || (plumbing.AnyObject != t && obj.Type() != t) {
 		return nil, plumbing.ErrObjectNotFound
@@ -224,6 +249,9 @@ func (tx *TxObjectStorage) EncodedObject(t plumbing.ObjectType, h plumbing.Hash)
 }
 
 func (tx *TxObjectStorage) Commit() error {
+	tx.m.RLock()
+	defer tx.m.RUnlock()
+
 	for h, obj := range tx.Objects {
 		delete(tx.Objects, h)
 		if _, err := tx.Storage.SetEncodedObject(obj); err != nil {
@@ -235,6 +263,9 @@ func (tx *TxObjectStorage) Commit() error {
 }
 
 func (tx *TxObjectStorage) Rollback() error {
+	tx.m.RLock()
+	defer tx.m.RUnlock()
+
 	tx.Objects = make(map[plumbing.Hash]plumbing.EncodedObject)
 	return nil
 }
