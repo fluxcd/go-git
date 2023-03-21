@@ -116,6 +116,14 @@ type Endpoint struct {
 	InsecureSkipTLS bool
 	// CaBundle specify additional ca bundle with system cert pool
 	CaBundle []byte
+	// Proxy provides info required for connecting to a proxy.
+	Proxy ProxyOptions
+}
+
+type ProxyOptions struct {
+	URL      string
+	Username string
+	Password string
 }
 
 var defaultPorts = map[string]int{
