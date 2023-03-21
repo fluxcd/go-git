@@ -72,11 +72,6 @@ func (s *upSession) UploadPack(
 	return common.DecodeUploadPackResponse(rc, req)
 }
 
-// Close does nothing.
-func (s *upSession) Close() error {
-	return nil
-}
-
 func (s *upSession) doRequest(
 	ctx context.Context, method, url string, content *bytes.Buffer,
 ) (*http.Response, error) {

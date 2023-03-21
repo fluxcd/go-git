@@ -4,9 +4,12 @@ package http
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -90,7 +93,11 @@ var DefaultClient = NewClient(nil)
 // for both.
 func NewClient(c *http.Client) transport.Transport {
 	if c == nil {
-		return &client{http.DefaultClient}
+		return &client{
+			c: &http.Client{
+				Transport: http.DefaultTransport,
+			},
+		}
 	}
 
 	return &client{
@@ -100,14 +107,76 @@ func NewClient(c *http.Client) transport.Transport {
 
 func (c *client) NewUploadPackSession(ep *transport.Endpoint, auth transport.AuthMethod) (
 	transport.UploadPackSession, error) {
-
-	return newUploadPackSession(c.c, ep, auth)
+	httpClient := configureHttpClient(c, ep)
+	return newUploadPackSession(httpClient, ep, auth)
 }
 
 func (c *client) NewReceivePackSession(ep *transport.Endpoint, auth transport.AuthMethod) (
 	transport.ReceivePackSession, error) {
+	httpClient := configureHttpClient(c, ep)
+	return newReceivePackSession(httpClient, ep, auth)
+}
 
-	return newReceivePackSession(c.c, ep, auth)
+func configureHttpClient(client *client, ep *transport.Endpoint) *http.Client {
+	httpClient := client.c
+	if ep.Proxy.URL != "" || (ep.Protocol == "https" && (ep.InsecureSkipTLS || len(ep.CaBundle) > 0)) {
+		// if the http client doesn't have a transport, use the default transport.
+		var t *http.Transport
+		if httpClient.Transport == nil {
+			t = http.DefaultTransport.(*http.Transport)
+		}
+		// not sure whether we need to clone here?
+		t = httpClient.Transport.(*http.Transport).Clone()
+		// make sure to clean the transport before using it to get rid of any
+		// sensitive/tenant specific info.
+		cleanTransport(t)
+		configureTransport(t, ep)
+		httpClient = &http.Client{
+			Transport:     t,
+			CheckRedirect: httpClient.CheckRedirect,
+			Jar:           httpClient.Jar,
+			Timeout:       httpClient.Timeout,
+		}
+	}
+	return httpClient
+}
+
+func configureTransport(httpTransport *http.Transport, ep *transport.Endpoint) error {
+	if ep.Proxy.URL != "" {
+		parsedUrl, err := url.Parse(ep.Proxy.URL)
+		if err != nil {
+			return err
+		}
+		if ep.Proxy.Password != "" && ep.Proxy.Username != "" {
+			parsedUrl.User = url.UserPassword(ep.Proxy.Username, ep.Proxy.Password)
+		}
+		httpTransport.Proxy = http.ProxyURL(parsedUrl)
+	}
+	if ep.Protocol == "https" {
+		if ep.InsecureSkipTLS {
+			httpTransport.TLSClientConfig = &tls.Config{
+				InsecureSkipVerify: true,
+			}
+		}
+
+		if len(ep.CaBundle) != 0 {
+			rootCAs, _ := x509.SystemCertPool()
+			if rootCAs == nil {
+				rootCAs = x509.NewCertPool()
+			}
+			rootCAs.AppendCertsFromPEM(ep.CaBundle)
+			httpTransport.TLSClientConfig = &tls.Config{
+				RootCAs: rootCAs,
+			}
+		}
+	}
+	return nil
+}
+
+func cleanTransport(t *http.Transport) {
+	t.Proxy = http.ProxyFromEnvironment
+	t.ProxyConnectHeader = nil
+	t.TLSClientConfig = nil
 }
 
 type session struct {
@@ -169,7 +238,13 @@ func (s *session) ModifyEndpointIfRedirect(res *http.Response) {
 	s.endpoint.Path = r.URL.Path[:len(r.URL.Path)-len(infoRefsPath)]
 }
 
-func (*session) Close() error {
+func (s *session) Close() error {
+	if s.client.Transport != nil {
+		t := s.client.Transport.(*http.Transport)
+		t.Proxy = nil
+		t.ProxyConnectHeader = nil
+		t.TLSClientConfig = nil
+	}
 	return nil
 }
 
